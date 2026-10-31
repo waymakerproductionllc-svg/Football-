@@ -210,7 +210,7 @@
   const GREEN_A = '#2f8a3a';
   const GREEN_B = '#287a33';
 
-  function drawField(parent, G, ez) {
+  function drawField(parent, G, ez, turfOnly = false) {
     const g = svg('g', null, parent);
     const known = G != null;
     const off = known ? ((G % 5) + 5) % 5 : 0;
@@ -225,6 +225,7 @@
       else if (n < 0 || n > 100) fill = ez;
       svg('polygon', { points: quad(-HALF, a, HALF, a + 5), fill }, g);
     }
+    if (turfOnly) return g;
     // yard lines + goal / end lines
     for (let d = start; d <= hi; d += 5) {
       const n = known ? G - d : 50;
@@ -406,8 +407,8 @@
     // pop text
     const pop = svg('g', { opacity: 0 }, labels);
     tgt.pop = pop;
-    const above = r.end.y - 92 >= BOX.y + 110;
-    tgt.popAt = { x: clamp(r.end.x, BOX.x + 110, BOX.x + BOX.w - 110), y: above ? r.end.y - 92 : r.end.y + 100 };
+    const above = r.end.y - 132 >= BOX.y + 110;
+    tgt.popAt = { x: clamp(r.end.x, BOX.x + 110, BOX.x + BOX.w - 110), y: above ? r.end.y - 132 : r.end.y + 120 };
     if (t.result === 'catch' && t.yards >= 10) {
       svg('polygon', { points: burstPoints(84, 56, 11, i), fill: '#ffe600', stroke: INK, 'stroke-width': 5 }, pop);
       text(pop, 'BOOM!', outlined({ y: -6, 'font-size': 50, 'font-weight': 700, fill: '#e8112d', 'text-anchor': 'middle', 'dominant-baseline': 'central', transform: 'rotate(-8)' }, 6));
@@ -668,6 +669,7 @@
   function buildGame(seg) {
     const g = seg.g;
     const L = layerSet();
+    drawField(L.fields, null, g.endZone, true); // plain turf shows through field-to-field dissolves
     const fields = g.targets.map((t) => drawField(L.fields, yardsToGoal(t.los), g.endZone));
     const neutral = drawField(L.fields, null, g.endZone);
     const form = drawFormation(L.formation);
@@ -693,11 +695,14 @@
     const cur = clamp(slot, 0, n - 1);
     const st = lt - (T.gameIn + cur * T.target);
 
-    // fields: crossfade per target, neutral in tree phase
-    const fadeNew = slot >= 1 && !inTree ? easeOut(span(st, 0, 0.3)) : 1;
+    // fields: old markings fade out before the new ones fade in (no doubled
+    // yard numbers), neutral field in the tree phase
+    const switching = slot >= 1 && !inTree;
+    const fadeNew = switching ? easeOut(span(st, 0.12, 0.32)) : 1;
+    const fadeOld = switching ? 1 - span(st, 0, 0.18) : 0;
     ui.fields.forEach((f, i) => {
       let o = 0;
-      if (!inTree) { if (i === cur) o = fadeNew; else if (i === cur - 1) o = 1; }
+      if (!inTree) { if (i === cur) o = fadeNew; else if (i === cur - 1) o = fadeOld; }
       else if (i === n - 1) o = 1;
       f.setAttribute('opacity', o);
     });

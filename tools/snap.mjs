@@ -1,4 +1,5 @@
 // Usage: node tools/snap.mjs <outdir> <t1> [t2 ...]  — renders still frames at the given times.
+// Env: PAGE=bills-matchup.html, FORMAT=vertical
 import { createRequire } from 'node:module';
 const { chromium } = createRequire(import.meta.url)('playwright');
 import path from 'node:path';
@@ -6,7 +7,7 @@ import { pathToFileURL } from 'node:url';
 
 const [outDir, ...times] = process.argv.slice(2);
 const fmt = process.env.FORMAT === 'vertical' ? '&format=vertical' : '';
-const url = pathToFileURL(path.resolve('index.html')).href + '?record' + fmt;
+const url = pathToFileURL(path.resolve(process.env.PAGE || 'index.html')).href + '?record' + fmt;
 const vp = fmt ? { width: 1080, height: 1920 } : { width: 1920, height: 1080 };
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: vp });

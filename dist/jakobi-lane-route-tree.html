@@ -287,6 +287,65 @@ body.vertical #footer {
 body.vertical .ov-intro { left: 540px; top: 1530px; }
 body.vertical .ov-ir .box { padding: 28px 40px 32px; }
 body.vertical .ov-ir .t3 { font-size: 24px; letter-spacing: 3px; white-space: nowrap; }
+
+/* ---------- Bills matchup page ---------- */
+.p-week .wk.wk-buf { background: #00338D; color: #fff; box-shadow: inset 0 -4px 0 #C60C30; }
+.badge.g-win { background: #3ef08a; color: var(--ink); }
+.badge.g-mid { background: var(--gold); color: var(--ink); }
+.badge.g-tough { background: var(--red); color: #fff; }
+.stat.g-win { border-bottom-color: #3ef08a; } .stat.g-win .v { color: #3ef08a; }
+.stat.g-mid { border-bottom-color: var(--gold); } .stat.g-mid .v { color: var(--gold); }
+.stat.g-tough { border-bottom-color: var(--red); } .stat.g-tough .v { color: var(--red); }
+.p-stats.three, .s-line.three { grid-template-columns: repeat(3, 1fr); }
+.p-stats.four { grid-template-columns: repeat(4, 1fr); margin-top: 22px; }
+.p-stats.four .stat .v { font-size: 40px; }
+.p-stats.four .stat .k { font-size: 14px; letter-spacing: 2px; line-height: 1.3; }
+.p-stats.four .rk { color: var(--gold); }
+.p-stats.three .stat { padding: 4px 0 6px; }
+.p-stats.three .stat .v { font-size: 40px; }
+.p-list.compact { gap: 5px; margin-top: 14px; }
+.p-list.compact .row { padding: 3px 12px 4px 10px; }
+.p-list.compact .rt { font-size: 21px; line-height: 1.05; }
+.p-list.compact .n { font-size: 20px; }
+.p-list.compact .badge { font-size: 16px; }
+.p-list.compact .pbp { font-size: 13.5px; line-height: 1.2; margin-top: 2px; }
+.p-note.small { font-size: 16px; line-height: 1.35; bottom: 18px; padding-top: 10px; }
+
+.mix { margin-top: 20px; display: flex; flex-direction: column; gap: 12px; }
+.mix-row { display: grid; grid-template-columns: 190px 1fr 92px; align-items: center; column-gap: 14px; }
+.mix-row .lbl { font-size: 23px; font-weight: 600; letter-spacing: 1px; }
+.mix-row .track { height: 28px; background: rgba(255,255,255,0.06); transform: skewX(-12deg); }
+.mix-row .fill { height: 100%; width: 0; background: linear-gradient(90deg, #00338D, #3f7bff); }
+.mix-row .fill.c4 { background: linear-gradient(90deg, #00338D, #a46bff); }
+.mix-row .fill.other { background: rgba(255,255,255,0.22); }
+.mix-row .pct { font-size: 30px; font-weight: 700; text-align: right; }
+.mix-row .sub { grid-column: 2 / 4; font-size: 14px; letter-spacing: 2px; color: var(--dim); margin-top: 2px; }
+.blitz { margin-top: 16px; font-size: 20px; letter-spacing: 2px; color: var(--dim); }
+.blitz b { color: #fff; font-size: 26px; margin: 0 4px; }
+
+.meter { margin-top: 22px; }
+.meter-bar { position: relative; height: 22px; background: linear-gradient(90deg, #ff3b5c, #ffc72c 50%, #3ef08a); transform: skewX(-12deg); }
+.meter-mark { position: absolute; left: 50%; top: -10px; width: 8px; height: 42px; background: #fff; box-shadow: 0 0 14px #fff; transform: translateX(-50%); }
+.meter-ends { display: flex; justify-content: space-between; margin-top: 8px; font-size: 14px; letter-spacing: 2px; color: var(--dim); }
+.meter-label { margin-top: 4px; font-size: 56px; font-weight: 700; letter-spacing: 4px; color: #3ef08a; transform-origin: left center; text-shadow: 0 0 24px rgba(62, 240, 138, 0.45); }
+.s-line.three { margin-top: 14px; }
+.bullets { list-style: none; margin-top: 18px; display: flex; flex-direction: column; gap: 11px; }
+.bullets li { display: grid; grid-template-columns: 30px 1fr; font-size: 18px; line-height: 1.32; color: #e4e1fa; }
+.bullets .ic { font-weight: 700; font-size: 20px; }
+.bullets .good .ic { color: #3ef08a; }
+.bullets .bad .ic { color: var(--red); }
+.ov-matchup .l1 { font-size: 46px; letter-spacing: 10px; }
+.ov-matchup .l2 { font-size: 170px; }
+
+body.vertical .p-list.compact .row { grid-template-columns: 40px 300px 1fr auto; }
+body.vertical .mix { gap: 8px; margin-top: 14px; }
+body.vertical .p-stats.four { margin-top: 14px; }
+body.vertical .meter { margin-top: 14px; }
+body.vertical .meter-label { font-size: 44px; }
+body.vertical .bullets { gap: 6px; margin-top: 12px; }
+body.vertical .bullets li { font-size: 16px; }
+body.vertical .p-stats.three .stat .v { font-size: 32px; }
+body.vertical .p-note.small { font-size: 14px; bottom: 14px; padding-top: 8px; }
 </style>
 </head>
 <body>

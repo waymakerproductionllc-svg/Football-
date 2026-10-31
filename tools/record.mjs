@@ -1,5 +1,5 @@
 // Renders the animation frame-by-frame and encodes an MP4 with ffmpeg.
-// Usage: node tools/record.mjs [out.mp4] [--fps 30] [--format vertical]
+// Usage: node tools/record.mjs [out.mp4] [--fps 30] [--format vertical] [--page bills-matchup.html]
 import { createRequire } from 'node:module';
 import { spawn } from 'node:child_process';
 import path from 'node:path';
@@ -15,10 +15,11 @@ const opt = (name, def) => {
 const fps = Number(opt('fps', 30));
 const format = opt('format', 'landscape');
 const vertical = format === 'vertical';
+const pageFile = opt('page', 'index.html');
 const out = args[0] || `renders/jakobi-lane-route-tree-2026${vertical ? '-vertical' : ''}.mp4`;
 const size = vertical ? { width: 1080, height: 1920 } : { width: 1920, height: 1080 };
 
-const url = pathToFileURL(path.resolve('index.html')).href + `?record${vertical ? '&format=vertical' : ''}`;
+const url = pathToFileURL(path.resolve(pageFile)).href + `?record${vertical ? '&format=vertical' : ''}`;
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: size });
 page.on('pageerror', (e) => console.error('page error:', e.message));

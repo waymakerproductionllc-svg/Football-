@@ -20,24 +20,52 @@ Each target animates in order: the route draws on, the ball is thrown, then the
 result pops (catch / incomplete / no play). After each game the full
 **target tree** for that game is shown with labels.
 
+## Week 8 matchup: Lane vs. the Bills defense
+
+`bills-matchup.html` models the coverages Buffalo leans on and grades Lane's
+route tree against each one, to answer "does this defense suit him?"
+
+| Segment | What's shown |
+|---|---|
+| Bills D | Coverage mix (Cover 3 34.4%, Cover 4 26.0%, other 39.6%), blitz rate, pass-defense stats, and the two-high pre-snap shell |
+| Cover 3 | Defenders rotate from two-high into three deep / four under; zones grow in, the soft spots get circled, then each of Lane's route types runs against it, graded WIN / CONTESTED / TOUGH |
+| Cover 4 | Same for quarters (four deep / three under) |
+| Verdict | Lane's tree colored by the blended grade, a matchup meter, and the reasoning |
+
+Current read: **favorable**. 69% of his targets are on routes that beat
+Cover 3 and 46% on routes that beat Cover 4. All 8 of his catches gained 6–11
+yards, which is the cushion those corners give up. His deep shots (0-for-3)
+attack where both shells are strongest.
+
+How the grades work: each route type is graded against each coverage with
+standard coverage rules (`grades` in `js/bills-data.js`). A route's blended
+score weights the Cover 3 and Cover 4 grades by how often Buffalo plays each,
+and the meter is the target-weighted average. Change a grade, a coverage
+share or Lane's routes, and every number on screen recalculates.
+
 ## Files
 
 ```
-index.html                       the graphic (open in any browser)
-dist/jakobi-lane-route-tree.html same thing as one self-contained file, easy to share
-renders/*.mp4                    exported video: 1920×1080 and 1080×1920 (Reels/TikTok/Shorts)
-js/data.js                       ← all game and target data, edit this
-js/app.js                        projection, route drawing and animation timeline
-css/style.css                    layout and styling (landscape and vertical)
-tools/record.mjs                 frame-by-frame MP4 export (Playwright + ffmpeg)
-tools/snap.mjs                   render still frames at given times
-tools/bundle.mjs                 build the single-file HTML
+index.html                          route tree graphic (open in any browser)
+bills-matchup.html                  Week 8 Bills coverage model
+dist/*.html                         both graphics as self-contained single files, easy to share
+renders/*.mp4                       exported videos: 1920×1080 and 1080×1920 (Reels/TikTok/Shorts)
+renders/*.png                       still posters (season tree, matchup verdict)
+js/data.js                          ← Lane's game and target data, edit this
+js/bills-data.js                    ← Bills coverage mix, defender spots, zones, route grades
+js/engine.js                        shared: field projection, players, routes, telestrator fx, playback
+js/app.js                           route tree segments
+js/bills.js                         matchup segments
+css/style.css                       layout and styling (landscape and vertical)
+tools/record.mjs                    frame-by-frame MP4 export (Playwright + ffmpeg)
+tools/snap.mjs                      render still frames at given times
+tools/bundle.mjs                    build a single-file HTML
 ```
 
 ## Viewing
 
-Open `index.html` (or `dist/jakobi-lane-route-tree.html`) in a browser. It
-scales to the window and loops.
+Open `index.html` or `bills-matchup.html` (or their `dist/` versions) in a
+browser. They scale to the window and loop.
 
 - **Space** play/pause, **R** restart, **← / →** previous/next game
 - Click a tab (WK 1, WK 6, …) to jump to that game
@@ -48,7 +76,7 @@ URL options:
 | Param | Effect |
 |---|---|
 | `?format=vertical` | 1080×1920 portrait layout for Reels, TikTok and Shorts |
-| `?seg=wk6` | start at a segment (`wk1`, `ir`, `wk6`, `wk7`, `season`) |
+| `?seg=wk6` | start at a segment (`wk1`, `ir`, `wk6`, `wk7`, `season`; matchup: `defense`, `c3`, `c4`, `verdict`) |
 | `?t=42&paused` | freeze on a specific second, useful for screenshots |
 
 ## Re-rendering the video
@@ -59,7 +87,9 @@ Requires Node, Playwright (Chromium) and ffmpeg.
 node tools/record.mjs                        # renders/jakobi-lane-route-tree-2026.mp4
 node tools/record.mjs --format vertical      # renders/jakobi-lane-route-tree-2026-vertical.mp4
 node tools/record.mjs out.mp4 --fps 60       # custom path / frame rate
+node tools/record.mjs renders/jakobi-lane-vs-bills-week8.mp4 --page bills-matchup.html
 node tools/bundle.mjs                        # rebuild dist/ after editing
+node tools/bundle.mjs dist/jakobi-lane-vs-bills-week8.html bills-matchup.html
 ```
 
 Every frame is a pure function of time, so the export is deterministic and
@@ -93,6 +123,13 @@ re-run the recorder.
 Sources: ESPN play-by-play, Pro-Football-Reference, NBC Sports / Rotoworld,
 Baltimore Beatdown film review, BaltimoreRavens.com. Data runs through Week 7
 (Oct 25, 2026). Next game: Week 8 @ BUF, Sun Nov 1.
+
+**Bills model:** the coverage rates come from one charting analysis (Buffalo
+Rumblings, 2026 through the Week 7 bye). Treat them as approximate until a
+tracking source (PFF, Sharp Football) confirms them. Defender landmarks are a
+textbook version of each shell, not Bills-specific tracking. Team stats come
+from AP, ESPN and Sharp Football Week 8 previews. Film notes come from The Lead
+and The Athletic.
 
 Font: [Oswald](https://github.com/googlefonts/OswaldFont), SIL Open Font
 License (`assets/fonts/OFL-Oswald.txt`).

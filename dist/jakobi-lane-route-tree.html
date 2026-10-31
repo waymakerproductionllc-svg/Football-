@@ -329,152 +329,19 @@ body.vertical .ov-ir .t3 { font-size: 24px; letter-spacing: 3px; white-space: no
 
   <script>
 /*
- * Ja'Kobi Lane — 2026 target data (Baltimore Ravens, rookie season).
+ * Shared engine for the telestrator-style field animations.
  *
- * Box-score totals (targets, catches, yards, long) match published game logs.
- * Per-target yardage / direction / field position come from public
- * play-by-play where available — the `pbp` string on each target is the
- * documented fact. The ROUTE TYPE drawn on the field is a reconstruction
- * that fits that depth/direction; it is not official tracking data.
- * Edit `route`, `side`, `depth` here if you chart the film yourself.
- *
- * Field conventions
- *   side   'L' | 'R'   which sideline Lane aligned toward (offense's view)
- *   depth  yards past the line of scrimmage where the route ends
- *   los    { opp: N } = opponent's N-yard line, { own: N } = own N, null = unknown
- *   result 'catch' | 'inc' | 'noplay'
- *   miss   optional [outward, downfield] yards the ball sailed past the target
- *
- * Route types: GO, FADE, OUT, CURL, HITCH, COMEBACK, SLANT, DIG, POST, CORNER
- */
-window.LANE_DATA = {
-  player: {
-    first: "JA'KOBI",
-    last: 'LANE',
-    number: 6,
-    pos: 'WR',
-    team: 'BALTIMORE',
-    tag: 'ROOKIE · RD 3, PICK 80 · USC',
-  },
-  season: 2026,
-  nextGame: 'WK 8 @ BUF · SUN NOV 1',
-
-  games: [
-    {
-      id: 'wk1',
-      week: 1,
-      tab: 'WK 1 @IND',
-      date: 'SEP 13, 2026',
-      opp: 'IND',
-      oppName: 'INDIANAPOLIS',
-      home: false,
-      result: 'W',
-      score: '41–23',
-      qb: 'LAMAR JACKSON',
-      endZone: '#0b3d82',
-      note:
-        'Fractured his wrist in the opener (surgery, then four games on IR). ' +
-        'A red-zone TD catch was wiped out by offensive holding.',
-      targets: [
-        { route: 'CURL', side: 'R', depth: 11, result: 'catch', yards: 11, los: null,
-          pbp: 'Reception, 11 yds' },
-        { route: 'GO', side: 'R', depth: 24, result: 'inc', los: null,
-          pbp: 'Target, incomplete' },
-        { route: 'FADE', side: 'R', depth: 6, result: 'noplay', yards: 4, los: { opp: 4 },
-          pbp: 'TD catch nullified — offensive holding, enforced at IND 4 (No Play)' },
-        { route: 'SLANT', side: 'R', depth: 7, result: 'inc', los: null,
-          pbp: 'Target, incomplete' },
-      ],
-    },
-    {
-      id: 'ir',
-      ir: true,
-      tab: 'WK 2–5 IR',
-      title: 'WEEKS 2–5',
-      headline: 'INJURED RESERVE',
-      lines: ['FRACTURED WRIST · WEEK 1', 'SURGERY · MID-SEPTEMBER', 'ACTIVATED · OCT 14'],
-    },
-    {
-      id: 'wk6',
-      week: 6,
-      tab: 'WK 6 @CLE',
-      date: 'OCT 18, 2026',
-      opp: 'CLE',
-      oppName: 'CLEVELAND',
-      home: false,
-      result: 'L',
-      score: '10–13',
-      qb: 'TYLER HUNTLEY',
-      endZone: '#5a2a0c',
-      note:
-        'First game back from IR. Lined up on the boundary on 20 of 22 receiving ' +
-        'snaps, won against press, and kept working back to the QB on scrambles.',
-      targets: [
-        { route: 'SLANT', side: 'L', depth: 11, result: 'catch', yards: 11, los: { opp: 32 },
-          pbp: 'Short pass, 11 yds to CLE 21 · opening drive' },
-        { route: 'CURL', side: 'L', depth: 8, result: 'catch', yards: 8, los: { opp: 17 },
-          pbp: 'Short pass, 8 yds to CLE 9 · set up the opening TD' },
-        { route: 'COMEBACK', side: 'L', depth: 10, result: 'catch', yards: 10, los: { own: 2 },
-          pbp: 'Short pass, 10 yds to BAL 12 · backed up at own 2' },
-        { route: 'GO', side: 'L', depth: 27, result: 'inc', los: null,
-          pbp: 'Deep pass, incomplete' },
-        { route: 'DIG', side: 'L', depth: 11, result: 'catch', yards: 11, los: { own: 39 },
-          pbp: 'Short middle, 11 yds to the 50' },
-      ],
-    },
-    {
-      id: 'wk7',
-      week: 7,
-      tab: 'WK 7 vs CIN',
-      date: 'OCT 25, 2026',
-      opp: 'CIN',
-      oppName: 'CINCINNATI',
-      home: true,
-      result: 'L',
-      score: '13–35',
-      qb: 'TYLER HUNTLEY',
-      endZone: '#2a1a6e',
-      note:
-        'Two red-zone targets, including a missed TD: open in the end zone, ' +
-        'but the throw was off target. Second on the team in first-read share.',
-      targets: [
-        { route: 'OUT', side: 'L', depth: 10, result: 'catch', yards: 10, los: { opp: 45 }, oob: true,
-          pbp: 'Short left, 10 yds, pushed out at CIN 35' },
-        { route: 'SLANT', side: 'R', depth: 9, result: 'catch', yards: 9, los: { opp: 29 },
-          pbp: 'Short right, 9 yds to CIN 20' },
-        { route: 'HITCH', side: 'L', depth: 6, result: 'catch', yards: 6, los: null,
-          pbp: 'Reception, 6 yds' },
-        { route: 'CORNER', side: 'R', depth: 19, result: 'inc', los: { opp: 12 }, losEst: true,
-          miss: [3.5, 4],
-          pbp: 'Open in the end zone — throw off target (red zone)' },
-        { route: 'CURL', side: 'L', depth: 12, result: 'inc', los: null,
-          pbp: 'Target, incomplete' },
-      ],
-    },
-  ],
-
-  sources: [
-    'ESPN play-by-play',
-    'Pro-Football-Reference',
-    'NBC Sports / Rotoworld',
-    'Baltimore Beatdown film review',
-    'BaltimoreRavens.com',
-  ],
-};
-</script>
-  <script>
-/*
- * Ja'Kobi Lane route-tree animation.
- *
- * Everything on screen is a pure function of time `t` (seconds): render(t)
+ * Everything on screen is a pure function of time `t` (seconds): RT.run()
  * rebuilds the active segment when it changes and then only updates
  * attributes. That keeps playback, scrubbing and frame-by-frame video export
  * (tools/record.mjs) identical.
+ *
+ * Field coordinates: X = yards across (0 = middle, + = offense's right),
+ * D = yards downfield from the line of scrimmage.
  */
-(() => {
+window.RT = (() => {
   'use strict';
 
-  const DATA = window.LANE_DATA;
   const SVGNS = 'http://www.w3.org/2000/svg';
   const query = new URLSearchParams(location.search);
   const RECORD = query.has('record');
@@ -543,32 +410,6 @@ window.LANE_DATA = {
   const poly = (pts) => pts.map(([X, D]) => { const q = P(X, D); return `${f1(q.x)},${f1(q.y)}`; }).join(' ');
   const quad = (x0, d0, x1, d1) => poly([[x0, d0], [x1, d0], [x1, d1], [x0, d1]]);
   const foreshorten = (X, D) => (P(X, D - 0.5).y - P(X, D + 0.5).y) / P(X, D).k;
-
-  // ---------- data helpers ----------
-  const yardsToGoal = (los) => (los ? (los.opp != null ? los.opp : 100 - los.own) : null);
-  function losText(game, t) {
-    if (!t.los) return null;
-    if (t.losEst) return 'RED ZONE';
-    if (t.los.opp != null) return t.los.opp === 50 ? 'MIDFIELD' : `${game.opp} ${t.los.opp}`;
-    return t.los.own === 50 ? 'MIDFIELD' : `BAL ${t.los.own}`;
-  }
-  function statsOf(targets, upto = Infinity) {
-    const s = { tgt: 0, rec: 0, yds: 0, lng: 0, td: 0 };
-    targets.forEach((t, i) => {
-      if (i >= upto || t.result === 'noplay') return;
-      s.tgt++;
-      if (t.result === 'catch') {
-        s.rec++;
-        s.yds += t.yards;
-        s.lng = Math.max(s.lng, t.yards);
-        if (t.td) s.td++;
-      }
-    });
-    return s;
-  }
-  const GAMES = DATA.games.filter((g) => !g.ir);
-  const SEASON_COLORS = { wk1: '#3fd4ff', wk6: '#ffc72c', wk7: '#ff6ad5' };
-  const COLORS = { catch: '#ffd21f', inc: '#ff3b5c', noplay: '#c9c7da' };
 
   // ---------- route shapes, in [outward yards, depth yards] relative to alignment ----------
   function curve(p0, c, p1, n = 14) {
@@ -779,12 +620,12 @@ window.LANE_DATA = {
     return { g, wide };
   }
 
-  function makeLaneIcon(parent) {
+  function makeLaneIcon(parent, label) {
     const g = svg('g', null, parent);
     svg('circle', { r: 30, fill: '#ffc72c', opacity: 0.35, filter: 'url(#bigglow)' }, g);
     svg('ellipse', { rx: 22, ry: 19, cy: 3, fill: '#000', opacity: 0.35 }, g);
     svg('circle', { r: 21, fill: 'url(#laneFill)', stroke: '#ffc72c', 'stroke-width': 3.5 }, g);
-    text(g, String(DATA.player.number), { y: 1, 'font-size': 27, 'font-weight': 700, fill: '#fff', 'text-anchor': 'middle', 'dominant-baseline': 'central' });
+    text(g, String(label), { y: 1, 'font-size': 27, 'font-weight': 700, fill: '#fff', 'text-anchor': 'middle', 'dominant-baseline': 'central' });
     return g;
   }
   function placeLane(icon, x, y, k, scale = 1, opacity = 1) {
@@ -839,20 +680,438 @@ window.LANE_DATA = {
     return g;
   }
 
+  function setRoute(tgt, p, opacity) {
+    tgt.g.setAttribute('opacity', opacity.toFixed(3));
+    const da = dashArray(tgt.r.L, p, tgt.dashed);
+    tgt.line.setAttribute('stroke-dasharray', da);
+    tgt.under.setAttribute('stroke-dasharray', dashArray(tgt.r.L, p, false));
+    const tip = pointAt(tgt.r, tgt.r.L * p);
+    tgt.arrow.setAttribute('transform', `translate(${f1(tip.x)},${f1(tip.y)}) rotate(${f1((tip.ang * 180) / Math.PI)}) scale(${(tip.k / K0).toFixed(3)})`);
+    const showBall = tgt.ballAtEnd && p >= 1;
+    tgt.arrow.setAttribute('opacity', p > 0.01 && !showBall ? 1 : 0);
+    tgt.endBall.setAttribute('opacity', showBall ? 1 : 0);
+    return tip;
+  }
+
+  // Glowing route line with an arrow tip (and optional ball marker at the end).
+  function routeLine(parent, r, { color, dashed = false, ballAtEnd = false, width = 6 }) {
+    const g = svg('g', { opacity: 0 }, parent);
+    const under = svg('path', { d: r.d, fill: 'none', stroke: INK, 'stroke-width': width + 5, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: 0.45 }, g);
+    const line = svg('path', { d: r.d, fill: 'none', stroke: color, 'stroke-width': width, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', filter: 'url(#glow)' }, g);
+    const arrow = svg('path', { d: 'M8 0 L-8 -8 L-4 0 L-8 8 Z', fill: color, stroke: INK, 'stroke-width': 1.5 }, g);
+    const endBall = svg('g', { opacity: 0 }, g);
+    svg('ellipse', { rx: 9, ry: 5.5, fill: '#8a4a1c', stroke: INK, 'stroke-width': 1.5, transform: 'rotate(-25)' }, endBall);
+    endBall.setAttribute('transform', `translate(${f1(r.end.x)},${f1(r.end.y)})`);
+    return { r, g, under, line, arrow, endBall, dashed, color, ballAtEnd };
+  }
+
+  function placeBall(ball, from, to, u) {
+    if (u <= 0 || u >= 1) { ball.g.setAttribute('opacity', 0); return; }
+    const X = lerp(from[0], to[0], u), Dd = lerp(from[1], to[1], u);
+    const ground = P(X, Dd);
+    const dist = Math.hypot(to[0] - from[0], to[1] - from[1]);
+    const h = Math.sin(Math.PI * u) * (2.5 + dist * 0.28) * ground.k;
+    ball.g.setAttribute('opacity', 1);
+    ball.shadow.setAttribute('transform', `translate(${f1(ground.x)},${f1(ground.y)}) scale(${(ground.k / K0).toFixed(3)})`);
+    const a = P(from[0], from[1]), b = P(to[0], to[1]);
+    const ang = (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI;
+    ball.body.setAttribute('transform', `translate(${f1(ground.x)},${f1(ground.y - h)}) rotate(${f1(ang)}) scale(${(ground.k / K0).toFixed(3)})`);
+  }
+
+  // ---------- per-segment layers ----------
+  const panel = $('panel');
+  const overlay = $('overlay');
+
+  function clearAll() {
+    world.innerHTML = '';
+    labels.innerHTML = '';
+    screen.innerHTML = '';
+    overlay.innerHTML = '';
+    panel.innerHTML = '';
+  }
+
+  function layerSet() {
+    const fields = svg('g', null, world);
+    const over = svg('g', null, world);
+    drawFieldOverlays(over);
+    const marks = drawDepthMarks(world);
+    const formation = svg('g', null, world);
+    const routes = svg('g', null, world);
+    const fx = svg('g', null, world);
+    const actors = svg('g', null, world);
+    return { fields, marks, formation, routes, fx, actors };
+  }
+
+  function fieldTitle(str, sub) {
+    const g = svg('g', { opacity: 0 }, labels);
+    const w = Math.max(str.length, (sub || '').length * 0.6) * 21 + 60;
+    svg('rect', { x: -w / 2, y: -30, width: w, height: sub ? 86 : 60, fill: 'rgba(7,6,26,0.88)', stroke: '#ffc72c', 'stroke-width': 2.5, transform: 'skewX(-10)' }, g);
+    text(g, str, { y: 0, 'font-size': 36, 'font-weight': 700, fill: '#fff', 'text-anchor': 'middle', 'dominant-baseline': 'central', 'letter-spacing': 3 });
+    if (sub) text(g, sub, { y: 38, 'font-size': 19, 'font-weight': 500, fill: '#ffc72c', 'text-anchor': 'middle', 'dominant-baseline': 'central', 'letter-spacing': 3 });
+    g.setAttribute('transform', `translate(${BOX.x + BOX.w / 2},${BOX.y + 58})`);
+    return g;
+  }
+
+  function playBug() {
+    const g = svg('g', { opacity: 0 }, labels);
+    svg('rect', { x: 0, y: 0, width: 270, height: 74, fill: 'rgba(7,6,26,0.88)', stroke: 'rgba(255,199,44,0.6)', 'stroke-width': 2, transform: 'skewX(-10)' }, g);
+    svg('rect', { x: 0, y: 0, width: 8, height: 74, fill: '#ffc72c', transform: 'skewX(-10)' }, g);
+    const a = text(g, '', { x: 22, y: 26, 'font-size': 24, 'font-weight': 700, fill: '#fff', 'letter-spacing': 2, 'dominant-baseline': 'central' });
+    const b = text(g, '', { x: 22, y: 54, 'font-size': 18, 'font-weight': 500, fill: '#ffc72c', 'letter-spacing': 2, 'dominant-baseline': 'central' });
+    g.setAttribute('transform', `translate(${BOX.x + 30},${BOX.y + 22})`);
+    return { g, a, b };
+  }
+
+  // Full-width swoosh banner used at the start of a segment.
+  function banner(big, title, sub, color = '#241773') {
+    const grp = svg('g', { opacity: 0 }, screen);
+    const cy = BOX.y + BOX.h * 0.46;
+    const x0 = BOX.x - 96, x1 = BOX.x + BOX.w + 76;
+    const wx = BOX.x + (VERTICAL ? 40 : 194), ox = wx + 330;
+    svg('polygon', { points: `${x0 + 40},${cy - 70} ${x1 + 40},${cy - 70} ${x1},${cy + 70} ${x0},${cy + 70}`, fill: color, opacity: 0.94 }, grp);
+    svg('polygon', { points: `${x0 + 40},${cy + 62} ${x1 + 40},${cy + 62} ${x1 + 36},${cy + 72} ${x0 + 36},${cy + 72}`, fill: '#ffc72c' }, grp);
+    text(grp, big, { x: wx, y: cy, 'font-size': 92, 'font-weight': 700, fill: '#ffc72c', 'dominant-baseline': 'central', 'letter-spacing': 2 });
+    text(grp, title, { x: ox, y: cy - 16, 'font-size': 54, 'font-weight': 700, fill: '#fff', 'dominant-baseline': 'central', 'letter-spacing': 2 });
+    text(grp, sub, { x: ox + 2, y: cy + 34, 'font-size': VERTICAL ? 22 : 26, 'font-weight': 500, fill: '#c8c3f0', 'dominant-baseline': 'central', 'letter-spacing': VERTICAL ? 2 : 3 });
+    return grp;
+  }
+  function slideBanner(grp, lt, outAt = 1.25) {
+    const bIn = easeOut(span(lt, 0.1, 0.5)), bOut = easeInOut(span(lt, outAt, outAt + 0.35));
+    grp.setAttribute('opacity', lt < outAt + 0.35 ? 1 : 0);
+    grp.setAttribute('transform', `translate(${f1(lerp(-STAGE.w * 0.75, 0, bIn) + lerp(0, STAGE.w * 0.8, bOut))},0)`);
+  }
+
+  // ---------- playback ----------
+  // segments: [{ kind, tab, dur, build(seg), update(seg, lt), intro? }]
+  // tabs:     [{ id, label, cls? }]
+  function run({ segments, tabs }) {
+    const SEGS = [];
+    let total = 0;
+    segments.forEach((s) => { SEGS.push(Object.assign(s, { start: total })); total += s.dur; });
+    const DURATION = total;
+
+    const bgSweep = document.createElement('div');
+    bgSweep.style.cssText = 'position:absolute;top:-200px;width:420px;height:1500px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.045),transparent);transform-origin:center;pointer-events:none';
+    $('bg').appendChild(bgSweep);
+
+    const tabsEl = $('tabs');
+    tabs.forEach((tb) => {
+      const el = document.createElement('div');
+      el.className = 'tab' + (tb.cls ? ` ${tb.cls}` : '');
+      el.innerHTML = `<div class="prog"></div><span>${tb.label}</span>`;
+      el.addEventListener('click', () => seek(SEGS.find((s) => s.tab === tb.id).start + 0.01));
+      tabsEl.appendChild(el);
+      tb.el = el;
+      tb.prog = el.firstElementChild;
+    });
+
+    let current = null;
+    function segAt(t) {
+      for (let i = SEGS.length - 1; i >= 0; i--) if (t >= SEGS[i].start) return SEGS[i];
+      return SEGS[0];
+    }
+    function render(t) {
+      t = clamp(t, 0, DURATION - 0.001);
+      const seg = segAt(t);
+      const lt = t - seg.start;
+      if (current !== seg) {
+        clearAll();
+        seg.build(seg);
+        current = seg;
+      }
+      seg.update(seg, lt);
+      if (!seg.intro) {
+        $('header').style.opacity = 1;
+        tabsEl.style.opacity = 1;
+      }
+      // segment cross-fade
+      const isLast = seg === SEGS[SEGS.length - 1];
+      const fade = Math.min(easeOut(span(lt, 0, 0.35)), isLast ? 1 : 1 - span(lt, seg.dur - 0.3, seg.dur));
+      world.setAttribute('opacity', fade.toFixed(3));
+      labels.setAttribute('opacity', fade.toFixed(3));
+      screen.setAttribute('opacity', fade.toFixed(3));
+      overlay.style.opacity = seg.intro ? 1 : fade;
+      const pIn = easeOut(span(lt, 0, 0.45));
+      panel.style.opacity = seg.intro ? 0 : fade;
+      panel.style.transform = `translateX(${f1((1 - pIn) * 60)}px)`;
+      tabs.forEach((tb) => {
+        const on = tb.id === seg.tab;
+        tb.el.classList.toggle('active', on);
+        tb.prog.style.width = on ? `${f1((lt / seg.dur) * 100)}%` : '0%';
+      });
+      bgSweep.style.transform = `translateX(${f1(((t * 140) % 3200) - 800)}px) rotate(18deg)`;
+      if (!scrubbing) scrub.value = Math.round((t / DURATION) * 1000);
+    }
+
+    // stage scaling
+    const stage = $('stage');
+    function fitStage() {
+      const s = RECORD ? 1 : Math.min(innerWidth / STAGE.w, innerHeight / STAGE.h);
+      stage.style.transform = `scale(${s})`;
+    }
+    addEventListener('resize', fitStage);
+    fitStage();
+
+    let time = Number(query.get('t')) || 0;
+    const startSeg = query.get('seg');
+    if (startSeg) {
+      const s = SEGS.find((x) => x.tab === startSeg);
+      if (s) time = s.start + 0.01;
+    }
+    let playing = !RECORD && !query.has('paused');
+    let speed = 1;
+    let last = null;
+    let scrubbing = false;
+    const scrub = $('scrub');
+    const btnPlay = $('btn-play');
+
+    function seek(t) {
+      time = clamp(t, 0, DURATION - 0.001);
+      render(time);
+    }
+    function setPlaying(p) {
+      playing = p;
+      btnPlay.textContent = p ? '❚❚' : '▶';
+      last = null;
+    }
+    function tick(now) {
+      if (playing) {
+        if (last != null) time += ((now - last) / 1000) * speed;
+        last = now;
+        if (time >= DURATION) time = 0; // loop
+        render(time);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    btnPlay.addEventListener('click', () => setPlaying(!playing));
+    $('btn-restart').addEventListener('click', () => { seek(0); setPlaying(true); });
+    $('btn-speed').addEventListener('click', (e) => {
+      speed = speed === 1 ? 0.5 : speed === 0.5 ? 2 : 1;
+      e.target.textContent = `${speed}×`;
+    });
+    scrub.addEventListener('input', () => { scrubbing = true; seek((scrub.value / 1000) * DURATION); });
+    scrub.addEventListener('change', () => { scrubbing = false; });
+    addEventListener('keydown', (e) => {
+      if (e.code === 'Space') { e.preventDefault(); setPlaying(!playing); }
+      if (e.key === 'r' || e.key === 'R') { seek(0); setPlaying(true); }
+      const idx = SEGS.indexOf(segAt(time));
+      if (e.key === 'ArrowRight' && idx < SEGS.length - 1) seek(SEGS[idx + 1].start + 0.01);
+      if (e.key === 'ArrowLeft') seek(SEGS[Math.max(0, idx - (time - SEGS[idx].start < 1 ? 1 : 0))].start + 0.01);
+    });
+
+    // hooks for tools/record.mjs and tools/snap.mjs
+    window.__duration = DURATION;
+    window.__seek = (t) => { time = t; render(t); };
+    window.__segments = SEGS.map((s) => ({ kind: s.kind, tab: s.tab, start: s.start, dur: s.dur }));
+
+    setPlaying(playing);
+    document.fonts.ready.then(() => {
+      render(time);
+      window.__ready = true;
+      requestAnimationFrame(tick);
+    });
+  }
+
+  return {
+    query, RECORD, VERTICAL, STAGE,
+    clamp, lerp, span, easeInOut, easeOut, easeBack, f1, svg, text, $,
+    HALF, D_MIN, D_MAX, LANE_X, BOX, P, K0, poly, quad, foreshorten,
+    curve, ROUTES, makeRoute, pointAt, dashArray,
+    root, world, labels, screen, panel, overlay,
+    drawField, drawFieldOverlays, drawDepthMarks,
+    OFFENSE, DEFENSE, drawFormation, makeLaneIcon, placeLane, makeBall, placeBall,
+    scribblePath, burstPoints, INK, outlined, makeChip,
+    routeLine, setRoute,
+    clearAll, layerSet, fieldTitle, playBug, banner, slideBanner,
+    run,
+  };
+})();
+</script>
+  <script>
+/*
+ * Ja'Kobi Lane — 2026 target data (Baltimore Ravens, rookie season).
+ *
+ * Box-score totals (targets, catches, yards, long) match published game logs.
+ * Per-target yardage / direction / field position come from public
+ * play-by-play where available — the `pbp` string on each target is the
+ * documented fact. The ROUTE TYPE drawn on the field is a reconstruction
+ * that fits that depth/direction; it is not official tracking data.
+ * Edit `route`, `side`, `depth` here if you chart the film yourself.
+ *
+ * Field conventions
+ *   side   'L' | 'R'   which sideline Lane aligned toward (offense's view)
+ *   depth  yards past the line of scrimmage where the route ends
+ *   los    { opp: N } = opponent's N-yard line, { own: N } = own N, null = unknown
+ *   result 'catch' | 'inc' | 'noplay'
+ *   miss   optional [outward, downfield] yards the ball sailed past the target
+ *
+ * Route types: GO, FADE, OUT, CURL, HITCH, COMEBACK, SLANT, DIG, POST, CORNER
+ */
+window.LANE_DATA = {
+  player: {
+    first: "JA'KOBI",
+    last: 'LANE',
+    number: 6,
+    pos: 'WR',
+    team: 'BALTIMORE',
+    tag: 'ROOKIE · RD 3, PICK 80 · USC',
+  },
+  season: 2026,
+  nextGame: 'WK 8 @ BUF · SUN NOV 1',
+
+  games: [
+    {
+      id: 'wk1',
+      week: 1,
+      tab: 'WK 1 @IND',
+      date: 'SEP 13, 2026',
+      opp: 'IND',
+      oppName: 'INDIANAPOLIS',
+      home: false,
+      result: 'W',
+      score: '41–23',
+      qb: 'LAMAR JACKSON',
+      endZone: '#0b3d82',
+      note:
+        'Fractured his wrist in the opener (surgery, then four games on IR). ' +
+        'A red-zone TD catch was wiped out by offensive holding.',
+      targets: [
+        { route: 'CURL', side: 'R', depth: 11, result: 'catch', yards: 11, los: null,
+          pbp: 'Reception, 11 yds' },
+        { route: 'GO', side: 'R', depth: 24, result: 'inc', los: null,
+          pbp: 'Target, incomplete' },
+        { route: 'FADE', side: 'R', depth: 6, result: 'noplay', yards: 4, los: { opp: 4 },
+          pbp: 'TD catch nullified — offensive holding, enforced at IND 4 (No Play)' },
+        { route: 'SLANT', side: 'R', depth: 7, result: 'inc', los: null,
+          pbp: 'Target, incomplete' },
+      ],
+    },
+    {
+      id: 'ir',
+      ir: true,
+      tab: 'WK 2–5 IR',
+      title: 'WEEKS 2–5',
+      headline: 'INJURED RESERVE',
+      lines: ['FRACTURED WRIST · WEEK 1', 'SURGERY · MID-SEPTEMBER', 'ACTIVATED · OCT 14'],
+    },
+    {
+      id: 'wk6',
+      week: 6,
+      tab: 'WK 6 @CLE',
+      date: 'OCT 18, 2026',
+      opp: 'CLE',
+      oppName: 'CLEVELAND',
+      home: false,
+      result: 'L',
+      score: '10–13',
+      qb: 'TYLER HUNTLEY',
+      endZone: '#5a2a0c',
+      note:
+        'First game back from IR. Lined up on the boundary on 20 of 22 receiving ' +
+        'snaps, won against press, and kept working back to the QB on scrambles.',
+      targets: [
+        { route: 'SLANT', side: 'L', depth: 11, result: 'catch', yards: 11, los: { opp: 32 },
+          pbp: 'Short pass, 11 yds to CLE 21 · opening drive' },
+        { route: 'CURL', side: 'L', depth: 8, result: 'catch', yards: 8, los: { opp: 17 },
+          pbp: 'Short pass, 8 yds to CLE 9 · set up the opening TD' },
+        { route: 'COMEBACK', side: 'L', depth: 10, result: 'catch', yards: 10, los: { own: 2 },
+          pbp: 'Short pass, 10 yds to BAL 12 · backed up at own 2' },
+        { route: 'GO', side: 'L', depth: 27, result: 'inc', los: null,
+          pbp: 'Deep pass, incomplete' },
+        { route: 'DIG', side: 'L', depth: 11, result: 'catch', yards: 11, los: { own: 39 },
+          pbp: 'Short middle, 11 yds to the 50' },
+      ],
+    },
+    {
+      id: 'wk7',
+      week: 7,
+      tab: 'WK 7 vs CIN',
+      date: 'OCT 25, 2026',
+      opp: 'CIN',
+      oppName: 'CINCINNATI',
+      home: true,
+      result: 'L',
+      score: '13–35',
+      qb: 'TYLER HUNTLEY',
+      endZone: '#2a1a6e',
+      note:
+        'Two red-zone targets, including a missed TD: open in the end zone, ' +
+        'but the throw was off target. Second on the team in first-read share.',
+      targets: [
+        { route: 'OUT', side: 'L', depth: 10, result: 'catch', yards: 10, los: { opp: 45 }, oob: true,
+          pbp: 'Short left, 10 yds, pushed out at CIN 35' },
+        { route: 'SLANT', side: 'R', depth: 9, result: 'catch', yards: 9, los: { opp: 29 },
+          pbp: 'Short right, 9 yds to CIN 20' },
+        { route: 'HITCH', side: 'L', depth: 6, result: 'catch', yards: 6, los: null,
+          pbp: 'Reception, 6 yds' },
+        { route: 'CORNER', side: 'R', depth: 19, result: 'inc', los: { opp: 12 }, losEst: true,
+          miss: [3.5, 4],
+          pbp: 'Open in the end zone — throw off target (red zone)' },
+        { route: 'CURL', side: 'L', depth: 12, result: 'inc', los: null,
+          pbp: 'Target, incomplete' },
+      ],
+    },
+  ],
+
+  sources: [
+    'ESPN play-by-play',
+    'Pro-Football-Reference',
+    'NBC Sports / Rotoworld',
+    'Baltimore Beatdown film review',
+    'BaltimoreRavens.com',
+  ],
+};
+</script>
+  <script>
+/*
+ * Ja'Kobi Lane 2026 route tree: one segment per game, an IR card and a
+ * season overlay. Rendering primitives and playback live in engine.js.
+ */
+(() => {
+  'use strict';
+
+  const DATA = window.LANE_DATA;
+  const {
+    VERTICAL, clamp, lerp, span, easeInOut, easeOut, easeBack, f1, svg, text, $,
+    BOX, P, K0, LANE_X, makeRoute, pointAt, overlay, panel, labels,
+    drawField, drawFormation, makeLaneIcon, placeLane, makeBall, placeBall,
+    scribblePath, burstPoints, INK, outlined, makeChip, routeLine, setRoute,
+    layerSet, fieldTitle, playBug, banner, slideBanner,
+  } = RT;
+
+  // ---------- data helpers ----------
+  const yardsToGoal = (los) => (los ? (los.opp != null ? los.opp : 100 - los.own) : null);
+  function losText(game, t) {
+    if (!t.los) return null;
+    if (t.losEst) return 'RED ZONE';
+    if (t.los.opp != null) return t.los.opp === 50 ? 'MIDFIELD' : `${game.opp} ${t.los.opp}`;
+    return t.los.own === 50 ? 'MIDFIELD' : `BAL ${t.los.own}`;
+  }
+  function statsOf(targets, upto = Infinity) {
+    const s = { tgt: 0, rec: 0, yds: 0, lng: 0, td: 0 };
+    targets.forEach((t, i) => {
+      if (i >= upto || t.result === 'noplay') return;
+      s.tgt++;
+      if (t.result === 'catch') {
+        s.rec++;
+        s.yds += t.yards;
+        s.lng = Math.max(s.lng, t.yards);
+        if (t.td) s.td++;
+      }
+    });
+    return s;
+  }
+  const GAMES = DATA.games.filter((g) => !g.ir);
+  const SEASON_COLORS = { wk1: '#3fd4ff', wk6: '#ffc72c', wk7: '#ff6ad5' };
+  const COLORS = { catch: '#ffd21f', inc: '#ff3b5c', noplay: '#c9c7da' };
+
   // One target = route + arrow + fx. Built once per segment, updated per frame.
   function buildTarget(t, i, layers, opts = {}) {
     const r = makeRoute(t);
     const color = opts.color || COLORS[t.result];
     const dashed = t.result !== 'catch';
-    const g = svg('g', { opacity: 0 }, layers.routes);
-    const under = svg('path', { d: r.d, fill: 'none', stroke: INK, 'stroke-width': 11, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: 0.45 }, g);
-    const line = svg('path', { d: r.d, fill: 'none', stroke: color, 'stroke-width': 6, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', filter: 'url(#glow)' }, g);
-    const arrow = svg('path', { d: 'M8 0 L-8 -8 L-4 0 L-8 8 Z', fill: color, stroke: INK, 'stroke-width': 1.5 }, g);
-    const endBall = svg('g', { opacity: 0 }, g);
-    svg('ellipse', { rx: 9, ry: 5.5, fill: '#8a4a1c', stroke: INK, 'stroke-width': 1.5, transform: 'rotate(-25)' }, endBall);
-    endBall.setAttribute('transform', `translate(${f1(r.end.x)},${f1(r.end.y)})`);
-
-    const tgt = { t, i, r, g, under, line, arrow, endBall, dashed, color };
+    const tgt = Object.assign(routeLine(layers.routes, r, { color, dashed, ballAtEnd: t.result !== 'inc' }), { t, i });
     if (opts.light) return tgt;
 
     // fx anchored at the ball spot
@@ -902,32 +1161,6 @@ window.LANE_DATA = {
     return tgt;
   }
 
-  function setRoute(tgt, p, opacity) {
-    tgt.g.setAttribute('opacity', opacity.toFixed(3));
-    const da = dashArray(tgt.r.L, p, tgt.dashed);
-    tgt.line.setAttribute('stroke-dasharray', da);
-    tgt.under.setAttribute('stroke-dasharray', dashArray(tgt.r.L, p, false));
-    const tip = pointAt(tgt.r, tgt.r.L * p);
-    tgt.arrow.setAttribute('transform', `translate(${f1(tip.x)},${f1(tip.y)}) rotate(${f1((tip.ang * 180) / Math.PI)}) scale(${(tip.k / K0).toFixed(3)})`);
-    const showBall = tgt.t.result !== 'inc' && p >= 1;
-    tgt.arrow.setAttribute('opacity', p > 0.01 && !showBall ? 1 : 0);
-    tgt.endBall.setAttribute('opacity', showBall ? 1 : 0);
-    return tip;
-  }
-
-  function placeBall(ball, from, to, u) {
-    if (u <= 0 || u >= 1) { ball.g.setAttribute('opacity', 0); return; }
-    const X = lerp(from[0], to[0], u), Dd = lerp(from[1], to[1], u);
-    const ground = P(X, Dd);
-    const dist = Math.hypot(to[0] - from[0], to[1] - from[1]);
-    const h = Math.sin(Math.PI * u) * (2.5 + dist * 0.28) * ground.k;
-    ball.g.setAttribute('opacity', 1);
-    ball.shadow.setAttribute('transform', `translate(${f1(ground.x)},${f1(ground.y)}) scale(${(ground.k / K0).toFixed(3)})`);
-    const a = P(from[0], from[1]), b = P(to[0], to[1]);
-    const ang = (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI;
-    ball.body.setAttribute('transform', `translate(${f1(ground.x)},${f1(ground.y - h)}) rotate(${f1(ang)}) scale(${(ground.k / K0).toFixed(3)})`);
-  }
-
   // Result effects for a target; st = seconds since the target slot started.
   function setFx(tgt, st, active) {
     const t = tgt.t;
@@ -958,7 +1191,6 @@ window.LANE_DATA = {
   }
 
   // ---------- panel (HTML) ----------
-  const panel = $('panel');
   function statBox(k, v) {
     return `<div class="stat"><div class="v">${v}</div><div class="k">${k}</div></div>`;
   }
@@ -1032,60 +1264,9 @@ window.LANE_DATA = {
   $('footer').innerHTML =
     `<span>Targets charted from public play-by-play (yardage · direction · field position). Route types are reconstructions, not official tracking data.</span>` +
     `<span>Sources: ${DATA.sources.join(', ')} · Unofficial fan graphic</span>`;
-  const bgSweep = document.createElement('div');
-  bgSweep.style.cssText = 'position:absolute;top:-200px;width:420px;height:1500px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.045),transparent);transform-origin:center;pointer-events:none';
-  $('bg').appendChild(bgSweep);
 
   // ---------- timeline ----------
   const T = { intro: 3.8, gameIn: 1.7, target: 2.6, tree: 3.8, ir: 3.6, season: 9 };
-  const SEGS = [];
-  let total = 0;
-  SEGS.push({ kind: 'intro', start: 0, dur: T.intro, tab: null });
-  total = T.intro;
-  DATA.games.forEach((g) => {
-    const dur = g.ir ? T.ir : T.gameIn + g.targets.length * T.target + T.tree;
-    SEGS.push({ kind: g.ir ? 'ir' : 'game', g, start: total, dur, tab: g.id });
-    total += dur;
-  });
-  SEGS.push({ kind: 'season', start: total, dur: T.season, tab: 'season' });
-  total += T.season;
-  const DURATION = total;
-
-  const tabsEl = $('tabs');
-  const TABS = [...DATA.games.map((g) => ({ id: g.id, label: g.tab, ir: !!g.ir })), { id: 'season', label: 'SEASON' }];
-  TABS.forEach((tb) => {
-    const el = document.createElement('div');
-    el.className = 'tab' + (tb.ir ? ' ir' : '');
-    el.innerHTML = `<div class="prog"></div><span>${tb.label}</span>`;
-    el.addEventListener('click', () => seek(SEGS.find((s) => s.tab === tb.id).start + 0.01));
-    tabsEl.appendChild(el);
-    tb.el = el;
-    tb.prog = el.firstElementChild;
-  });
-
-  // ---------- segment builders ----------
-  let current = null;
-  const overlay = $('overlay');
-
-  function clearAll() {
-    world.innerHTML = '';
-    labels.innerHTML = '';
-    screen.innerHTML = '';
-    overlay.innerHTML = '';
-    panel.innerHTML = '';
-  }
-
-  function layerSet() {
-    const fields = svg('g', null, world);
-    const over = svg('g', null, world);
-    drawFieldOverlays(over);
-    const marks = drawDepthMarks(world);
-    const formation = svg('g', null, world);
-    const routes = svg('g', null, world);
-    const fx = svg('g', null, world);
-    const actors = svg('g', null, world);
-    return { fields, marks, formation, routes, fx, actors };
-  }
 
   function seasonRoutes(layers) {
     const list = [];
@@ -1093,39 +1274,6 @@ window.LANE_DATA = {
       list.push(buildTarget(t, list.length, layers, { light: true, color: t.result === 'noplay' ? COLORS.noplay : SEASON_COLORS[g.id] }));
     }));
     return list;
-  }
-
-  function fieldTitle(str, sub) {
-    const g = svg('g', { opacity: 0 }, labels);
-    const w = Math.max(str.length, (sub || '').length * 0.6) * 21 + 60;
-    svg('rect', { x: -w / 2, y: -30, width: w, height: sub ? 86 : 60, fill: 'rgba(7,6,26,0.88)', stroke: '#ffc72c', 'stroke-width': 2.5, transform: 'skewX(-10)' }, g);
-    text(g, str, { y: 0, 'font-size': 36, 'font-weight': 700, fill: '#fff', 'text-anchor': 'middle', 'dominant-baseline': 'central', 'letter-spacing': 3 });
-    if (sub) text(g, sub, { y: 38, 'font-size': 19, 'font-weight': 500, fill: '#ffc72c', 'text-anchor': 'middle', 'dominant-baseline': 'central', 'letter-spacing': 3 });
-    g.setAttribute('transform', `translate(${BOX.x + BOX.w / 2},${BOX.y + 58})`);
-    return g;
-  }
-
-  function playBug() {
-    const g = svg('g', { opacity: 0 }, labels);
-    svg('rect', { x: 0, y: 0, width: 270, height: 74, fill: 'rgba(7,6,26,0.88)', stroke: 'rgba(255,199,44,0.6)', 'stroke-width': 2, transform: 'skewX(-10)' }, g);
-    svg('rect', { x: 0, y: 0, width: 8, height: 74, fill: '#ffc72c', transform: 'skewX(-10)' }, g);
-    const a = text(g, '', { x: 22, y: 26, 'font-size': 24, 'font-weight': 700, fill: '#fff', 'letter-spacing': 2, 'dominant-baseline': 'central' });
-    const b = text(g, '', { x: 22, y: 54, 'font-size': 18, 'font-weight': 500, fill: '#ffc72c', 'letter-spacing': 2, 'dominant-baseline': 'central' });
-    g.setAttribute('transform', `translate(${BOX.x + 30},${BOX.y + 22})`);
-    return { g, a, b };
-  }
-
-  function banner(g) {
-    const grp = svg('g', { opacity: 0 }, screen);
-    const cy = BOX.y + BOX.h * 0.46;
-    const x0 = BOX.x - 96, x1 = BOX.x + BOX.w + 76;
-    const wx = BOX.x + (VERTICAL ? 40 : 194), ox = wx + 330;
-    svg('polygon', { points: `${x0 + 40},${cy - 70} ${x1 + 40},${cy - 70} ${x1},${cy + 70} ${x0},${cy + 70}`, fill: '#241773', opacity: 0.94 }, grp);
-    svg('polygon', { points: `${x0 + 40},${cy + 62} ${x1 + 40},${cy + 62} ${x1 + 36},${cy + 72} ${x0 + 36},${cy + 72}`, fill: '#ffc72c' }, grp);
-    text(grp, `WEEK ${g.week}`, { x: wx, y: cy, 'font-size': 92, 'font-weight': 700, fill: '#ffc72c', 'dominant-baseline': 'central', 'letter-spacing': 2 });
-    text(grp, `${g.home ? 'vs' : '@'} ${g.oppName}`, { x: ox, y: cy - 16, 'font-size': 54, 'font-weight': 700, fill: '#fff', 'dominant-baseline': 'central', 'letter-spacing': 2 });
-    text(grp, `${g.result} ${g.score} · ${g.date} · ${g.targets.filter((x) => x.result !== 'noplay').length} TARGETS`, { x: ox + 2, y: cy + 34, 'font-size': VERTICAL ? 22 : 26, 'font-weight': 500, fill: '#c8c3f0', 'dominant-baseline': 'central', 'letter-spacing': VERTICAL ? 2 : 3 });
-    return grp;
   }
 
   const plural = (n, word) => `${n} ${word}${n === 1 ? '' : word.endsWith('H') ? 'ES' : 'S'}`;
@@ -1140,15 +1288,16 @@ window.LANE_DATA = {
     const form = drawFormation(L.formation);
     const targets = g.targets.map((t, i) => buildTarget(t, i, L));
     const ball = makeBall(L.actors);
-    const lane = makeLaneIcon(L.actors);
-    const lane2 = makeLaneIcon(L.actors);
+    const lane = makeLaneIcon(L.actors, DATA.player.number);
+    const lane2 = makeLaneIcon(L.actors, DATA.player.number);
     const sidesUsed = [...new Set(g.targets.map((t) => t.side))];
     seg.ui = {
       L, fields, neutral, form, targets, ball, lane, lane2, sidesUsed,
       panel: buildGamePanel(g),
       title: fieldTitle(`WEEK ${g.week} TARGET TREE`, treeSubtitle(statsOf(g.targets))),
       bug: playBug(),
-      banner: banner(g),
+      banner: banner(`WEEK ${g.week}`, `${g.home ? 'vs' : '@'} ${g.oppName}`,
+        `${g.result} ${g.score} · ${g.date} · ${g.targets.filter((x) => x.result !== 'noplay').length} TARGETS`),
     };
   }
 
@@ -1173,10 +1322,7 @@ window.LANE_DATA = {
     });
     ui.neutral.setAttribute('opacity', inTree ? easeOut(span(lt - treeStart, 0, 0.45)) : 0);
 
-    // banner
-    const bIn = easeOut(span(lt, 0.1, 0.5)), bOut = easeInOut(span(lt, 1.25, 1.6));
-    ui.banner.setAttribute('opacity', lt < 1.6 ? 1 : 0);
-    ui.banner.setAttribute('transform', `translate(${f1(lerp(-STAGE.w * 0.75, 0, bIn) + lerp(0, STAGE.w * 0.8, bOut))},0)`);
+    slideBanner(ui.banner, lt);
 
     // targets
     let resolved = 0, lastResolveAt = -9;
@@ -1281,7 +1427,7 @@ window.LANE_DATA = {
     l3.style.clipPath = `inset(0 ${f1((1 - c) * 100)}% 0 0)`;
     l4.style.opacity = easeOut(span(lt, 1.2, 1.7));
     $('header').style.opacity = 0;
-    tabsEl.style.opacity = easeOut(span(lt, seg.dur - 0.5, seg.dur));
+    $('tabs').style.opacity = easeOut(span(lt, seg.dur - 0.5, seg.dur));
   }
 
   function buildIr(seg) {
@@ -1314,7 +1460,7 @@ window.LANE_DATA = {
     drawField(L.fields, null, '#241773');
     drawFormation(L.formation, { noDefense: true });
     const lanes = ['L', 'R'].map((side) => {
-      const ic = makeLaneIcon(L.actors);
+      const ic = makeLaneIcon(L.actors, DATA.player.number);
       const q = P((side === 'L' ? -1 : 1) * LANE_X, 0);
       return { ic, q };
     });
@@ -1336,117 +1482,17 @@ window.LANE_DATA = {
     });
   }
 
-  const BUILD = { intro: buildIntro, game: buildGame, ir: buildIr, season: buildSeason };
-  const UPDATE = { intro: updateIntro, game: updateGame, ir: updateIr, season: updateSeason };
-
-  // ---------- render ----------
-  function segAt(t) {
-    for (let i = SEGS.length - 1; i >= 0; i--) if (t >= SEGS[i].start) return SEGS[i];
-    return SEGS[0];
-  }
-  function render(t) {
-    t = clamp(t, 0, DURATION - 0.001);
-    const seg = segAt(t);
-    const lt = t - seg.start;
-    if (current !== seg) {
-      clearAll();
-      BUILD[seg.kind](seg);
-      current = seg;
-    }
-    UPDATE[seg.kind](seg, lt);
-    if (seg.kind !== 'intro') {
-      $('header').style.opacity = 1;
-      tabsEl.style.opacity = 1;
-    }
-    // segment cross-fade
-    const isLast = seg === SEGS[SEGS.length - 1];
-    const fade = Math.min(easeOut(span(lt, 0, 0.35)), isLast ? 1 : 1 - span(lt, seg.dur - 0.3, seg.dur));
-    world.setAttribute('opacity', fade.toFixed(3));
-    labels.setAttribute('opacity', fade.toFixed(3));
-    screen.setAttribute('opacity', fade.toFixed(3));
-    if (seg.kind !== 'intro') overlay.style.opacity = fade;
-    else overlay.style.opacity = 1;
-    const pIn = easeOut(span(lt, 0, 0.45));
-    panel.style.opacity = seg.kind === 'intro' ? 0 : fade;
-    panel.style.transform = `translateX(${f1((1 - pIn) * 60)}px)`;
-    // tabs
-    TABS.forEach((tb) => {
-      const on = tb.id === seg.tab;
-      tb.el.classList.toggle('active', on);
-      tb.prog.style.width = on ? `${f1((lt / seg.dur) * 100)}%` : '0%';
-    });
-    bgSweep.style.transform = `translateX(${f1(((t * 140) % 3200) - 800)}px) rotate(18deg)`;
-    if (scrub && !scrubbing) scrub.value = Math.round((t / DURATION) * 1000);
-  }
-
-  // ---------- stage scaling ----------
-  const stage = $('stage');
-  function fitStage() {
-    const s = RECORD ? 1 : Math.min(innerWidth / STAGE.w, innerHeight / STAGE.h);
-    stage.style.transform = `scale(${s})`;
-  }
-  addEventListener('resize', fitStage);
-  fitStage();
-
-  // ---------- playback ----------
-  let time = Number(query.get('t')) || 0;
-  const startSeg = query.get('seg');
-  if (startSeg) {
-    const s = SEGS.find((x) => x.tab === startSeg);
-    if (s) time = s.start + 0.01;
-  }
-  let playing = !RECORD && !query.has('paused');
-  let speed = 1;
-  let last = null;
-  let scrubbing = false;
-  const scrub = $('scrub');
-  const btnPlay = $('btn-play');
-
-  function seek(t) {
-    time = clamp(t, 0, DURATION - 0.001);
-    render(time);
-  }
-  function setPlaying(p) {
-    playing = p;
-    btnPlay.textContent = p ? '❚❚' : '▶';
-    last = null;
-  }
-  function tick(now) {
-    if (playing) {
-      if (last != null) time += ((now - last) / 1000) * speed;
-      last = now;
-      if (time >= DURATION) time = 0; // loop
-      render(time);
-    }
-    requestAnimationFrame(tick);
-  }
-
-  btnPlay.addEventListener('click', () => setPlaying(!playing));
-  $('btn-restart').addEventListener('click', () => { seek(0); setPlaying(true); });
-  $('btn-speed').addEventListener('click', (e) => {
-    speed = speed === 1 ? 0.5 : speed === 0.5 ? 2 : 1;
-    e.target.textContent = `${speed}×`;
+  // ---------- run ----------
+  const segments = [{ kind: 'intro', tab: null, dur: T.intro, intro: true, build: buildIntro, update: updateIntro }];
+  DATA.games.forEach((g) => {
+    segments.push(g.ir
+      ? { kind: 'ir', g, tab: g.id, dur: T.ir, build: buildIr, update: updateIr }
+      : { kind: 'game', g, tab: g.id, dur: T.gameIn + g.targets.length * T.target + T.tree, build: buildGame, update: updateGame });
   });
-  scrub.addEventListener('input', () => { scrubbing = true; seek((scrub.value / 1000) * DURATION); });
-  scrub.addEventListener('change', () => { scrubbing = false; });
-  addEventListener('keydown', (e) => {
-    if (e.code === 'Space') { e.preventDefault(); setPlaying(!playing); }
-    if (e.key === 'r' || e.key === 'R') { seek(0); setPlaying(true); }
-    const idx = SEGS.indexOf(segAt(time));
-    if (e.key === 'ArrowRight' && idx < SEGS.length - 1) seek(SEGS[idx + 1].start + 0.01);
-    if (e.key === 'ArrowLeft') seek(SEGS[Math.max(0, idx - (time - SEGS[idx].start < 1 ? 1 : 0))].start + 0.01);
-  });
-
-  // hooks for tools/record.mjs
-  window.__duration = DURATION;
-  window.__seek = (t) => { time = t; render(t); };
-  window.__segments = SEGS.map((s) => ({ kind: s.kind, tab: s.tab, start: s.start, dur: s.dur }));
-
-  setPlaying(playing);
-  document.fonts.ready.then(() => {
-    render(time);
-    window.__ready = true;
-    requestAnimationFrame(tick);
+  segments.push({ kind: 'season', tab: 'season', dur: T.season, build: buildSeason, update: updateSeason });
+  RT.run({
+    segments,
+    tabs: [...DATA.games.map((g) => ({ id: g.id, label: g.tab, cls: g.ir ? 'ir' : '' })), { id: 'season', label: 'SEASON' }],
   });
 })();
 </script>

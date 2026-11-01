@@ -43,19 +43,52 @@ score weights the Cover 3 and Cover 4 grades by how often Buffalo plays each,
 and the meter is the target-weighted average. Change a grade, a coverage
 share or Lane's routes, and every number on screen recalculates.
 
+## Lineup coverage check: any player vs. any defense
+
+`lineup.html` runs the same coverage model for a whole fantasy lineup. Each
+starter gets a segment: his opponent's most-used shell animates in, his route
+profile runs against it, and each route is graded against the defense's full
+coverage mix. A board at the end ranks everyone.
+
+To use it for a new week, edit **`js/lineup-data.js`**:
+
+- `players`: who you're starting, their NFL opponent, kickoff time, leagues,
+  and a `role` (`X`, `OUTSIDE`, `SLOT`, `MOVE`, `TE`, `DEEP`, or `charted` for
+  play-by-play targets like Lane's)
+- `defenses`: each opponent's coverage mix (`c1`, `c2`, `c3`, `c4`, `m2`
+  shares), blitz rate, reported pass-defense quality, and how solid the data is
+- `calls`: lineup decisions to spell out on the board (scores fill in automatically)
+
+How the score works: every route type has a grade against every shell
+(`js/coverages.js`, standard coverage rules). A player's score is his route
+profile graded against this defense's mix, minus the same profile against a
+league-typical mix, plus a small shift for reported pass-defense quality.
+So **0 means an ordinary week for him**, plus means this defense suits him
+better, and minus means worse. Blitz-heavy defenses nudge quick routes up and
+slow routes down.
+
+Limits: route profiles are role templates unless charted, and several coverage
+mixes are derived or low-confidence (shown on screen as HIGH / MED / LOW). This
+grades coverage fit only. Volume, QB play and injuries still decide the week.
+
 ## Files
 
 ```
 index.html                          route tree graphic (open in any browser)
 bills-matchup.html                  Week 8 Bills coverage model
+lineup.html                         lineup coverage check (all your starters)
 dist/*.html                         both graphics as self-contained single files, easy to share
 renders/*.mp4                       exported videos: 1920×1080 and 1080×1920 (Reels/TikTok/Shorts)
 renders/*.png                       still posters (season tree, matchup verdict)
 js/data.js                          ← Lane's game and target data, edit this
 js/bills-data.js                    ← Bills coverage mix, defender spots, zones, route grades
+js/lineup-data.js                   ← your starters, their opponents' coverage mixes
+js/coverages.js                     shell library: Cover 1/2/3/4, 2-Man landmarks, zones, route grades
+js/matchup-kit.js                   shared zones / defenders / soft-spot markers
 js/engine.js                        shared: field projection, players, routes, telestrator fx, playback
 js/app.js                           route tree segments
-js/bills.js                         matchup segments
+js/bills.js                         Bills matchup segments
+js/lineup.js                        lineup segments and scoring
 css/style.css                       layout and styling (landscape and vertical)
 tools/record.mjs                    frame-by-frame MP4 export (Playwright + ffmpeg)
 tools/snap.mjs                      render still frames at given times
@@ -76,7 +109,7 @@ URL options:
 | Param | Effect |
 |---|---|
 | `?format=vertical` | 1080×1920 portrait layout for Reels, TikTok and Shorts |
-| `?seg=wk6` | start at a segment (`wk1`, `ir`, `wk6`, `wk7`, `season`; matchup: `defense`, `c3`, `c4`, `verdict`) |
+| `?seg=wk6` | start at a segment (`wk1`, `ir`, `wk6`, `wk7`, `season`; matchup: `defense`, `c3`, `c4`, `verdict`; lineup: a player id like `stbrown`, or `board`) |
 | `?t=42&paused` | freeze on a specific second, useful for screenshots |
 
 ## Re-rendering the video
@@ -90,6 +123,8 @@ node tools/record.mjs out.mp4 --fps 60       # custom path / frame rate
 node tools/record.mjs renders/jakobi-lane-vs-bills-week8.mp4 --page bills-matchup.html
 node tools/bundle.mjs                        # rebuild dist/ after editing
 node tools/bundle.mjs dist/jakobi-lane-vs-bills-week8.html bills-matchup.html
+node tools/record.mjs renders/lineup-week8.mp4 --page lineup.html
+node tools/bundle.mjs dist/lineup-week8.html lineup.html
 ```
 
 Every frame is a pure function of time, so the export is deterministic and

@@ -101,11 +101,15 @@ window.RT = (() => {
     DIG: (d) => [[0, 0], [0, d - 0.3], [-0.7, d], [-13, d]],
     POST: (d) => [[0, 0], [0, 11], [-(d - 11) * 0.65, d]],
     CORNER: (d) => [[0, 0], [0, 9], [(d - 9) * 0.6, d]],
+    SEAM: (d) => [[0, 0], [0, 4], ...curve([0, 4], [-0.4, d * 0.6], [-1.2, d])],
+    DRAG: (d) => [[0, 0], [-0.8, 1.2], ...curve([-0.8, 1.2], [-3, d], [-14, d])],
+    FLAT: (d) => [[0, 0], [0, 1], ...curve([0, 1], [1.5, d], [6, d])],
   };
 
+  // t: { route, side: 'L'|'R', depth, x? (alignment yards from the middle; default wide) }
   function makeRoute(t) {
     const out = t.side === 'L' ? -1 : 1;
-    const x0 = out * LANE_X;
+    const x0 = out * (t.x != null ? t.x : LANE_X);
     const rel = (ROUTES[t.route] || ROUTES.GO)(t.depth, t);
     const pts = [];
     rel.forEach(([o, d], i) => {
@@ -277,6 +281,7 @@ window.RT = (() => {
       });
     }
     OFFENSE.forEach(([X, D]) => {
+      if (opts.skipX != null && Math.abs(X - opts.skipX) < 0.5) return; // a featured player lines up here
       const q = P(X, D);
       svg('ellipse', { cx: f1(q.x), cy: f1(q.y), rx: f1(0.78 * q.k), ry: f1(0.78 * q.k * 0.8), fill: 'rgba(255,255,255,0.16)', stroke: 'rgba(255,255,255,0.7)', 'stroke-width': 2 }, g);
     });

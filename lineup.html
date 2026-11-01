@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My Lineup vs. Their Coverage — Week 8</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="viewport">
+    <div id="stage">
+      <div id="bg"></div>
+
+      <header id="header">
+        <div class="name-block">
+          <div class="num-badge"><span id="hdr-num"></span></div>
+          <div class="name-text">
+            <div class="first" id="hdr-first"></div>
+            <div class="last" id="hdr-last"></div>
+          </div>
+        </div>
+        <div class="title-block">
+          <div class="title-main">COVERAGE CHECK</div>
+          <div class="title-sub">EVERY STARTER vs HIS OPPONENT'S D</div>
+        </div>
+      </header>
+
+      <svg id="field" width="1920" height="1080" viewBox="0 0 1920 1080"></svg>
+
+      <aside id="panel"></aside>
+
+      <nav id="tabs"></nav>
+
+      <footer id="footer"></footer>
+
+      <div id="overlay"></div>
+    </div>
+  </div>
+
+  <div id="controls">
+    <button id="btn-restart" title="Restart (R)">⏮</button>
+    <button id="btn-play" title="Play / pause (Space)">❚❚</button>
+    <input id="scrub" type="range" min="0" max="1000" value="0">
+    <button id="btn-speed" title="Playback speed">1×</button>
+  </div>
+
+  <script src="js/engine.js"></script>
+  <script src="js/matchup-kit.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/coverages.js"></script>
+  <script src="js/lineup-data.js"></script>
+  <script src="js/lineup.js"></script>
+</body>
+</html>

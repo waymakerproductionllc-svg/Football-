@@ -346,6 +346,50 @@ body.vertical .bullets { gap: 6px; margin-top: 12px; }
 body.vertical .bullets li { font-size: 16px; }
 body.vertical .p-stats.three .stat .v { font-size: 32px; }
 body.vertical .p-note.small { font-size: 14px; bottom: 14px; padding-top: 8px; }
+
+/* ---------- lineup page ---------- */
+#tabs.many { gap: 4px; }
+#tabs.many .tab { font-size: 13px; letter-spacing: 0.5px; transform: skewX(-8deg); }
+#tabs.many .tab > span { transform: skewX(8deg); }
+.p-leagues { margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; }
+.p-leagues span { font-size: 14px; letter-spacing: 2px; padding: 2px 10px; background: rgba(255,199,44,0.12); border: 1px solid rgba(255,199,44,0.45); color: var(--gold); }
+.mix.tight { margin-top: 14px; gap: 6px; }
+.mix.tight .mix-row { grid-template-columns: 120px 1fr 64px; }
+.mix.tight .mix-row .lbl { font-size: 18px; }
+.mix.tight .mix-row .track { height: 18px; }
+.mix.tight .mix-row .pct { font-size: 20px; }
+.mix .conf { margin-top: 4px; font-size: 14px; letter-spacing: 2px; color: var(--dim); }
+.c-HIGH { color: #3ef08a; } .c-MED { color: var(--gold); } .c-LOW { color: #ff8a5c; }
+.conf b, .vs i { font-style: normal; font-weight: 700; }
+.p-list.compact.single { margin-top: 12px; gap: 4px; }
+.p-list.compact.single .row { grid-template-columns: 52px 108px 1fr auto; padding: 3px 10px; }
+.p-list.compact.single .pbp { grid-column: auto; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.p-list.compact.single .n { font-size: 17px; }
+.meter.small { margin-top: 14px; }
+.meter.small .meter-bar { height: 16px; }
+.meter.small .meter-mark { top: -8px; height: 32px; }
+.meter.small .meter-label { font-size: 40px; margin-top: 6px; }
+
+.board { position: absolute; display: flex; flex-direction: column; gap: 5px; }
+.board-h, .board-row { display: grid; grid-template-columns: 230px 1fr 190px 250px 90px; align-items: center; column-gap: 14px; }
+.board-h { font-size: 15px; letter-spacing: 3px; color: var(--dim); padding: 0 14px 4px; }
+.board-row { background: rgba(20, 14, 60, 0.85); border-left: 5px solid var(--gold); padding: 5px 14px; transform: skewX(-6deg); }
+.board-row > * { transform: skewX(6deg); }
+.board-row .who b { display: block; font-size: 26px; letter-spacing: 1px; line-height: 1.05; }
+.board-row .who span { font-size: 14px; letter-spacing: 2px; color: var(--dim); }
+.board-row .bar { position: relative; height: 22px; background: rgba(255,255,255,0.07); }
+.board-row .bar .mid { position: absolute; left: 50%; top: -4px; bottom: -4px; width: 2px; background: rgba(255,255,255,0.4); }
+.board-row .bar .val { position: absolute; top: 0; bottom: 0; }
+.board-row .lab { font-size: 16px; font-weight: 700; letter-spacing: 1px; white-space: nowrap; }
+.board-row .vs { font-size: 17px; letter-spacing: 1px; color: #d9d6f2; }
+.board-row .vs i { margin-left: 6px; font-size: 13px; letter-spacing: 1px; }
+.board-row .kick { font-size: 17px; color: var(--gold); text-align: right; }
+
+body.vertical .board-h, body.vertical .board-row { grid-template-columns: 170px 1fr 150px 170px 70px; column-gap: 8px; }
+body.vertical .board-row .who b { font-size: 21px; }
+body.vertical .board-row .vs { font-size: 14px; }
+body.vertical .p-list.compact.single .row { grid-template-columns: 52px 108px 1fr auto; }
+body.vertical #tabs.many .tab { font-size: 10px; }
 </style>
 </head>
 <body>
@@ -490,11 +534,15 @@ window.RT = (() => {
     DIG: (d) => [[0, 0], [0, d - 0.3], [-0.7, d], [-13, d]],
     POST: (d) => [[0, 0], [0, 11], [-(d - 11) * 0.65, d]],
     CORNER: (d) => [[0, 0], [0, 9], [(d - 9) * 0.6, d]],
+    SEAM: (d) => [[0, 0], [0, 4], ...curve([0, 4], [-0.4, d * 0.6], [-1.2, d])],
+    DRAG: (d) => [[0, 0], [-0.8, 1.2], ...curve([-0.8, 1.2], [-3, d], [-14, d])],
+    FLAT: (d) => [[0, 0], [0, 1], ...curve([0, 1], [1.5, d], [6, d])],
   };
 
+  // t: { route, side: 'L'|'R', depth, x? (alignment yards from the middle; default wide) }
   function makeRoute(t) {
     const out = t.side === 'L' ? -1 : 1;
-    const x0 = out * LANE_X;
+    const x0 = out * (t.x != null ? t.x : LANE_X);
     const rel = (ROUTES[t.route] || ROUTES.GO)(t.depth, t);
     const pts = [];
     rel.forEach(([o, d], i) => {
@@ -666,6 +714,7 @@ window.RT = (() => {
       });
     }
     OFFENSE.forEach(([X, D]) => {
+      if (opts.skipX != null && Math.abs(X - opts.skipX) < 0.5) return; // a featured player lines up here
       const q = P(X, D);
       svg('ellipse', { cx: f1(q.x), cy: f1(q.y), rx: f1(0.78 * q.k), ry: f1(0.78 * q.k * 0.8), fill: 'rgba(255,255,255,0.16)', stroke: 'rgba(255,255,255,0.7)', 'stroke-width': 2 }, g);
     });
@@ -989,6 +1038,102 @@ window.RT = (() => {
 </script>
   <script>
 /*
+ * Shared pieces for coverage-matchup pages (bills.js, lineup.js): route
+ * grades, zone bubbles, defenders that move from pre-snap spots to their
+ * landmarks, and telestrator circles on the soft spots.
+ */
+window.MK = (() => {
+  'use strict';
+
+  const { clamp, lerp, easeOut, easeBack, f1, svg, text, BOX, P, K0, poly, labels, scribblePath, makeChip } = RT;
+
+  const GRADE = {
+    win: { color: '#3ef08a', label: 'WIN', score: 1 },
+    mid: { color: '#ffc72c', label: 'CONTESTED', score: 0 },
+    tough: { color: '#ff3b5c', label: 'TOUGH', score: -1 },
+  };
+  const ZONE_COLORS = { deep: '#3f7bff', hook: '#a46bff', flat: '#39c6ff' };
+  const blendGrade = (s) => (s >= 0.5 ? 'win' : s <= -0.5 ? 'tough' : 'mid');
+  const meterLabel = (s) => (s >= 0.25 ? 'FAVORABLE' : s >= 0.05 ? 'SLIGHT EDGE' : s > -0.05 ? 'NEUTRAL' : s > -0.25 ? 'SLIGHT DISADVANTAGE' : 'TOUGH');
+  const meterColor = (s) => (s >= 0.05 ? GRADE.win.color : s > -0.05 ? GRADE.mid.color : GRADE.tough.color);
+
+  function ellipsePoints(c, r, n = 44) {
+    const pts = [];
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2;
+      pts.push([c[0] + Math.cos(a) * r[0], c[1] + Math.sin(a) * r[1]]);
+    }
+    return pts;
+  }
+  function buildZones(parent, cov) {
+    return cov.zones.map((z) => {
+      const color = ZONE_COLORS[z.type];
+      const g = svg('g', { opacity: 0 }, parent);
+      svg('polygon', { points: poly(ellipsePoints(z.c, z.r)), fill: color, 'fill-opacity': 0.2, stroke: color, 'stroke-width': 2.5, 'stroke-dasharray': '9 6' }, g);
+      const q = P(z.c[0], z.c[1]);
+      const lq = P(z.c[0], z.c[1] - z.r[1] * 0.62); // label sits below the defender's landmark
+      text(g, z.label, { x: f1(lq.x), y: f1(lq.y), 'font-size': f1(Math.max(13, lq.k * 0.8)), 'font-weight': 600, fill: '#fff', opacity: 0.85, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'letter-spacing': 1.5 });
+      return { g, q };
+    });
+  }
+  function setZones(zones, u) {
+    zones.forEach(({ g, q }, i) => {
+      const v = easeBack(clamp(u * 1.6 - i * 0.08));
+      g.setAttribute('opacity', clamp(v).toFixed(3));
+      g.setAttribute('transform', `translate(${f1(q.x)},${f1(q.y)}) scale(${(0.2 + 0.8 * v).toFixed(3)}) translate(${f1(-q.x)},${f1(-q.y)})`);
+    });
+  }
+
+  function defenderIcon(parent, pos, [fill, stroke]) {
+    const g = svg('g', { opacity: 0 }, parent);
+    svg('ellipse', { rx: 19, ry: 16, cy: 3, fill: '#000', opacity: 0.3 }, g);
+    svg('circle', { r: 17, fill, stroke, 'stroke-width': 3 }, g);
+    text(g, pos, { y: 1, 'font-size': pos.length > 2 ? 11 : 13, 'font-weight': 700, fill: '#fff', 'text-anchor': 'middle', 'dominant-baseline': 'central' });
+    return g;
+  }
+  function placeAt(g, X, D, opacity = 1) {
+    const q = P(X, D);
+    g.setAttribute('transform', `translate(${f1(q.x)},${f1(q.y)}) scale(${(q.k / K0).toFixed(3)})`);
+    g.setAttribute('opacity', opacity.toFixed(3));
+  }
+  function buildDefense(trailLayer, iconLayer, cov, colors) {
+    return cov.defenders.map((d) => {
+      const a = P(d.pre[0], d.pre[1]), b = P(d.post[0], d.post[1]);
+      const len = Math.hypot(b.x - a.x, b.y - a.y);
+      const trail = svg('path', { d: `M${f1(a.x)} ${f1(a.y)} L${f1(b.x)} ${f1(b.y)}`, fill: 'none', stroke: d.rush ? colors[1] : '#dfe7ff', 'stroke-width': 3, 'stroke-linecap': 'round', opacity: 0 }, trailLayer);
+      return { d, len, trail, icon: defenderIcon(iconLayer, d.pos, colors) };
+    });
+  }
+  function setDefense(defs, u, show = 1) {
+    defs.forEach((o) => {
+      placeAt(o.icon, lerp(o.d.pre[0], o.d.post[0], u), lerp(o.d.pre[1], o.d.post[1], u), show);
+      o.trail.setAttribute('stroke-dasharray', `${f1(o.len * u)} ${f1(o.len + 10)}`);
+      o.trail.setAttribute('opacity', u > 0 ? (0.55 * show).toFixed(3) : 0);
+    });
+  }
+
+  function holeMark(parent, at, label, seed, size = [50, 32]) {
+    const q = P(at[0], at[1]);
+    const sc = scribblePath(q.x, q.y, (size[0] * q.k) / K0, (size[1] * q.k) / K0, seed);
+    const path = svg('path', { d: sc.d, fill: 'none', stroke: '#ffe600', 'stroke-width': 5, 'stroke-linecap': 'round', filter: 'url(#glow)', opacity: 0 }, parent);
+    const chip = makeChip(labels, label, '#ffe600');
+    chip.setAttribute('transform', `translate(${f1(clamp(q.x, BOX.x + 110, BOX.x + BOX.w - 110))},${f1(q.y - ((size[1] + 16) * q.k) / K0)})`);
+    return { path, L: sc.L, chip };
+  }
+  function setHole(h, u, opacity = 1) {
+    h.path.setAttribute('opacity', u > 0 ? opacity : 0);
+    h.path.setAttribute('stroke-dasharray', `${f1(h.L * u)} ${f1(h.L + 10)}`);
+    h.chip.setAttribute('opacity', (easeOut(clamp((u - 0.4) * 2)) * opacity).toFixed(3));
+  }
+
+  return {
+    GRADE, ZONE_COLORS, blendGrade, meterLabel, meterColor,
+    ellipsePoints, buildZones, setZones, defenderIcon, placeAt, buildDefense, setDefense, holeMark, setHole,
+  };
+})();
+</script>
+  <script>
+/*
  * Ja'Kobi Lane — 2026 target data (Baltimore Ravens, rookie season).
  *
  * Box-score totals (targets, catches, yards, long) match published game logs.
@@ -1301,20 +1446,15 @@ window.BILLS_DATA = {
   const LANE = window.LANE_DATA;
   const BILLS = window.BILLS_DATA;
   const {
-    VERTICAL, clamp, lerp, span, easeInOut, easeOut, easeBack, f1, svg, text, $,
-    BOX, P, K0, LANE_X, poly, makeRoute, pointAt, overlay, panel, labels,
-    drawField, drawFormation, makeLaneIcon, placeLane, scribblePath, makeChip,
-    routeLine, setRoute, layerSet, fieldTitle, banner, slideBanner,
+    clamp, lerp, span, easeInOut, easeOut, easeBack, f1, svg, text, BOX, P, LANE_X, makeRoute,
+    pointAt, overlay, panel, labels, drawField, drawFormation, makeLaneIcon, placeLane, makeChip,
+    routeLine, setRoute, layerSet, fieldTitle, banner, slideBanner, $,
   } = RT;
 
   const BUF_BLUE = '#00338D';
   const BUF_RED = '#C60C30';
-  const GRADE = {
-    win: { color: '#3ef08a', label: 'WIN', score: 1 },
-    mid: { color: '#ffc72c', label: 'CONTESTED', score: 0 },
-    tough: { color: '#ff3b5c', label: 'TOUGH', score: -1 },
-  };
-  const ZONE_COLORS = { deep: '#3f7bff', hook: '#a46bff', flat: '#39c6ff' };
+  const BUF_COLORS = [BUF_BLUE, BUF_RED];
+  const { GRADE, blendGrade, meterLabel, buildZones, setZones, placeAt, buildDefense, setDefense, holeMark, setHole } = MK;
   const LOS_G = 60; // model every snap from Baltimore's own 40
 
   // ---------- Lane's route tree, grouped by route type ----------
@@ -1338,14 +1478,12 @@ window.BILLS_DATA = {
   const SHARE = COVS.reduce((a, c) => a + c.pct, 0);
   const gradeOf = (cov, route) => (cov.grades[route] || ['mid', ''])[0];
   const blendedScore = (route) => COVS.reduce((a, c) => a + GRADE[gradeOf(c, route)].score * c.pct, 0) / SHARE;
-  const blendGrade = (s) => (s >= 0.5 ? 'win' : s <= -0.5 ? 'tough' : 'mid');
   function tally(cov) {
     const out = { win: 0, mid: 0, tough: 0 };
     TREE.forEach((r) => { out[gradeOf(cov, r.route)] += r.n; });
     return out;
   }
   const MATCHUP = TREE.reduce((a, r) => a + blendedScore(r.route) * r.n, 0) / TOTAL; // -1 … +1
-  const meterLabel = (s) => (s >= 0.25 ? 'FAVORABLE' : s >= 0.05 ? 'SLIGHT EDGE' : s > -0.05 ? 'NEUTRAL' : s > -0.25 ? 'SLIGHT DISADVANTAGE' : 'TOUGH');
 
   function verdictPoints() {
     const catches = TARGETS.filter((t) => t.result === 'catch');
@@ -1362,76 +1500,6 @@ window.BILLS_DATA = {
       }
       return p;
     });
-  }
-
-  // ---------- field pieces ----------
-  function ellipsePoints(c, r, n = 44) {
-    const pts = [];
-    for (let i = 0; i < n; i++) {
-      const a = (i / n) * Math.PI * 2;
-      pts.push([c[0] + Math.cos(a) * r[0], c[1] + Math.sin(a) * r[1]]);
-    }
-    return pts;
-  }
-  function buildZones(parent, cov) {
-    return cov.zones.map((z) => {
-      const color = ZONE_COLORS[z.type];
-      const g = svg('g', { opacity: 0 }, parent);
-      svg('polygon', { points: poly(ellipsePoints(z.c, z.r)), fill: color, 'fill-opacity': 0.2, stroke: color, 'stroke-width': 2.5, 'stroke-dasharray': '9 6' }, g);
-      const q = P(z.c[0], z.c[1]);
-      const lq = P(z.c[0], z.c[1] - z.r[1] * 0.62); // label sits below the defender's landmark
-      text(g, z.label, { x: f1(lq.x), y: f1(lq.y), 'font-size': f1(Math.max(13, lq.k * 0.8)), 'font-weight': 600, fill: '#fff', opacity: 0.85, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'letter-spacing': 1.5 });
-      return { g, q };
-    });
-  }
-  function setZones(zones, u) {
-    zones.forEach(({ g, q }, i) => {
-      const v = easeBack(clamp(u * 1.6 - i * 0.08));
-      g.setAttribute('opacity', clamp(v).toFixed(3));
-      g.setAttribute('transform', `translate(${f1(q.x)},${f1(q.y)}) scale(${(0.2 + 0.8 * v).toFixed(3)}) translate(${f1(-q.x)},${f1(-q.y)})`);
-    });
-  }
-
-  function defenderIcon(parent, pos) {
-    const g = svg('g', { opacity: 0 }, parent);
-    svg('ellipse', { rx: 19, ry: 16, cy: 3, fill: '#000', opacity: 0.3 }, g);
-    svg('circle', { r: 17, fill: BUF_BLUE, stroke: BUF_RED, 'stroke-width': 3 }, g);
-    text(g, pos, { y: 1, 'font-size': pos.length > 2 ? 11 : 13, 'font-weight': 700, fill: '#fff', 'text-anchor': 'middle', 'dominant-baseline': 'central' });
-    return g;
-  }
-  function placeAt(g, X, D, opacity = 1) {
-    const q = P(X, D);
-    g.setAttribute('transform', `translate(${f1(q.x)},${f1(q.y)}) scale(${(q.k / K0).toFixed(3)})`);
-    g.setAttribute('opacity', opacity.toFixed(3));
-  }
-  function buildDefense(trailLayer, iconLayer, cov) {
-    return cov.defenders.map((d) => {
-      const a = P(d.pre[0], d.pre[1]), b = P(d.post[0], d.post[1]);
-      const len = Math.hypot(b.x - a.x, b.y - a.y);
-      const trail = svg('path', { d: `M${f1(a.x)} ${f1(a.y)} L${f1(b.x)} ${f1(b.y)}`, fill: 'none', stroke: d.rush ? BUF_RED : '#dfe7ff', 'stroke-width': 3, 'stroke-linecap': 'round', opacity: 0 }, trailLayer);
-      return { d, len, trail, icon: defenderIcon(iconLayer, d.pos) };
-    });
-  }
-  function setDefense(defs, u, show = 1) {
-    defs.forEach((o) => {
-      placeAt(o.icon, lerp(o.d.pre[0], o.d.post[0], u), lerp(o.d.pre[1], o.d.post[1], u), show);
-      o.trail.setAttribute('stroke-dasharray', `${f1(o.len * u)} ${f1(o.len + 10)}`);
-      o.trail.setAttribute('opacity', u > 0 ? (0.55 * show).toFixed(3) : 0);
-    });
-  }
-
-  function holeMark(parent, at, label, seed, size = [50, 32]) {
-    const q = P(at[0], at[1]);
-    const sc = scribblePath(q.x, q.y, (size[0] * q.k) / K0, (size[1] * q.k) / K0, seed);
-    const path = svg('path', { d: sc.d, fill: 'none', stroke: '#ffe600', 'stroke-width': 5, 'stroke-linecap': 'round', filter: 'url(#glow)', opacity: 0 }, parent);
-    const chip = makeChip(labels, label, '#ffe600');
-    chip.setAttribute('transform', `translate(${f1(clamp(q.x, BOX.x + 110, BOX.x + BOX.w - 110))},${f1(q.y - ((size[1] + 16) * q.k) / K0)})`);
-    return { path, L: sc.L, chip };
-  }
-  function setHole(h, u, opacity = 1) {
-    h.path.setAttribute('opacity', u > 0 ? opacity : 0);
-    h.path.setAttribute('stroke-dasharray', `${f1(h.L * u)} ${f1(h.L + 10)}`);
-    h.chip.setAttribute('opacity', (easeOut(clamp((u - 0.4) * 2)) * opacity).toFixed(3));
   }
 
   // Lane's tree from the boundary (offense's left), one route per type.
@@ -1537,7 +1605,7 @@ window.BILLS_DATA = {
     const L = layerSet();
     const f = baseField(L);
     const cov = COVS[0];
-    seg.ui = { zones: buildZones(f.zoneLayer, cov), defs: buildDefense(f.trailLayer, L.actors, cov) };
+    seg.ui = { zones: buildZones(f.zoneLayer, cov), defs: buildDefense(f.trailLayer, L.actors, cov, BUF_COLORS) };
     overlay.innerHTML = `<div class="ov-card ov-intro ov-matchup">
         <div class="l1">${LANE.player.first} ${LANE.player.last} vs</div>
         <div class="l2">BILLS D</div>
@@ -1570,7 +1638,7 @@ window.BILLS_DATA = {
   function buildDefenseSeg(seg) {
     const L = layerSet();
     const f = baseField(L);
-    const defs = buildDefense(f.trailLayer, L.actors, COVS[0]);
+    const defs = buildDefense(f.trailLayer, L.actors, COVS[0], BUF_COLORS);
     seg.ui = {
       defs,
       shell: holeMark(L.fx, [0, 13], 'TWO-HIGH LOOK PRE-SNAP', 3, [235, 46]),
@@ -1597,7 +1665,7 @@ window.BILLS_DATA = {
     seg.ui = {
       f,
       zones: buildZones(f.zoneLayer, cov),
-      defs: buildDefense(f.trailLayer, L.actors, cov),
+      defs: buildDefense(f.trailLayer, L.actors, cov, BUF_COLORS),
       holes: cov.holes.map((h, i) => holeMark(L.fx, h.at, h.label, i + 2)),
       routes: buildTree(L.routes, (route) => gradeOf(cov, route)),
       panel: buildCoveragePanel(cov),
